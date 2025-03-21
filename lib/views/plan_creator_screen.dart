@@ -3,27 +3,6 @@ import '../provider/plan_provider.dart';
 import '../models/data_layer.dart';
 import '../views/plan_screen.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return PlanProvider(
-      notifier: ValueNotifier<List<Plan>>([]),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Master Plan App',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: const PlanCreatorScreen(),
-      ),
-    );
-  }
-}
-
 class PlanCreatorScreen extends StatefulWidget {
   const PlanCreatorScreen({super.key});
 
@@ -114,22 +93,6 @@ class _PlanCreatorScreenState extends State<PlanCreatorScreen> {
           },
         );
       },
-    );
-  }
-}
-
-class PlanScreen extends StatelessWidget {
-  final String planName;
-
-  const PlanScreen({super.key, required this.planName});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(planName)),
-      body: Center(
-        child: Text('Detail untuk rencana: $planName'),
-      ),
     );
   }
 }

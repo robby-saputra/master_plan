@@ -1,15 +1,16 @@
-import '../models/data_layer.dart';
 import 'package:flutter/material.dart';
+import '../models/data_layer.dart';
+import '../provider/plan_provider.dart';
 
 class PlanScreen extends StatefulWidget {
-  const PlanScreen({super.key});
+  final String planName;
+  const PlanScreen({super.key, required this.planName});
 
   @override
-  State createState() => _PlanScreenState();
+  _PlanScreenState createState() => _PlanScreenState();
 }
 
 class _PlanScreenState extends State<PlanScreen> {
-  Plan plan = const Plan();
   late ScrollController scrollController;
 
   @override
@@ -22,86 +23,96 @@ class _PlanScreenState extends State<PlanScreen> {
   }
 
   @override
-  void dispose() {
-    scrollController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    ValueNotifier<List<Plan>> plansNotifier = PlanProvider.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.planName)),
+      body: ValueListenableBuilder<List<Plan>>(
+        valueListenable: plansNotifier,
+        builder: (context, plans, child) {
+          final plan = plans.firstWhere((p) => p.name == widget.planName, orElse: () => Plan(name: widget.planName));
+          return Column(
+            children: [
+              Expanded(child: _buildList(plan)),
+              SafeArea(child: Text(plan.completenessMessage)),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: _buildAddTaskButton(context),
+    );
   }
 
-  Widget _buildAddTaskButton() {
+  Widget _buildAddTaskButton(BuildContext context) {
+    ValueNotifier<List<Plan>> planNotifier = PlanProvider.of(context);
     return FloatingActionButton(
       child: const Icon(Icons.add),
       onPressed: () {
-        setState(() {
-          plan = Plan(
-            name: plan.name,
-            tasks: List<Task>.from(plan.tasks)..add(const Task()),
+        final plans = planNotifier.value;
+        final planIndex = plans.indexWhere((p) => p.name == widget.planName);
+        if (planIndex == -1) return;
+
+        final updatedTasks = List<Task>.from(plans[planIndex].tasks)..add(const Task());
+        planNotifier.value = List<Plan>.from(plans)
+          ..[planIndex] = Plan(
+            name: plans[planIndex].name,
+            tasks: updatedTasks,
           );
-        });
       },
     );
   }
 
-  Widget _buildTaskTile(Task task, int index) {
+  Widget _buildList(Plan plan) {
+    return ListView.builder(
+      itemCount: plan.tasks.length,
+      itemBuilder: (context, index) {
+        return _buildTaskTile(plan, index, context);
+      },
+    );
+  }
+
+  Widget _buildTaskTile(Plan plan, int index, BuildContext context) {
+    ValueNotifier<List<Plan>> planNotifier = PlanProvider.of(context);
+    final task = plan.tasks[index];
+
     return ListTile(
       leading: Checkbox(
         value: task.complete,
         onChanged: (selected) {
-          setState(() {
-            plan = Plan(
-              name: plan.name,
-              tasks: List<Task>.from(plan.tasks)
+          final plans = planNotifier.value;
+          final planIndex = plans.indexWhere((p) => p.name == widget.planName);
+          if (planIndex == -1) return;
+
+          planNotifier.value = List<Plan>.from(plans)
+            ..[planIndex] = Plan(
+              name: plans[planIndex].name,
+              tasks: List<Task>.from(plans[planIndex].tasks)
                 ..[index] = Task(
                   description: task.description,
                   complete: selected ?? false,
                 ),
             );
-          });
         },
       ),
       title: TextFormField(
         initialValue: task.description,
         onChanged: (text) {
-          setState(() {
-            plan = Plan(
-              name: plan.name,
-              tasks: List<Task>.from(plan.tasks)
+          final plans = planNotifier.value;
+          final planIndex = plans.indexWhere((p) => p.name == widget.planName);
+          if (planIndex == -1) return;
+
+          planNotifier.value = List<Plan>.from(plans)
+            ..[planIndex] = Plan(
+              name: plans[planIndex].name,
+              tasks: List<Task>.from(plans[planIndex].tasks)
                 ..[index] = Task(
                   description: text,
                   complete: task.complete,
                 ),
             );
-          });
         },
       ),
-    );
-  }
-
-  Widget _buildList() {
-    return ListView.builder(
-      controller: scrollController,
-      keyboardDismissBehavior: Theme.of(context).platform == TargetPlatform.iOS
-          ? ScrollViewKeyboardDismissBehavior.onDrag
-          : ScrollViewKeyboardDismissBehavior.manual,
-      itemCount: plan.tasks.length,
-      itemBuilder: (context, index) {
-        return _buildTaskTile(plan.tasks[index], index);
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Master Plan Robby',
-          style: TextStyle(color: Colors.white), // Ubah warna teks jadi putih
-        ),
-        backgroundColor: Colors.lightBlue, // Ubah warna navbar jadi biru muda
-        iconTheme: const IconThemeData(color: Colors.white), // Pastikan ikon juga putih
-      ),
-      body: _buildList(),
-      floatingActionButton: _buildAddTaskButton(),
     );
   }
 }
