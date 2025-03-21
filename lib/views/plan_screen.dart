@@ -9,7 +9,23 @@ class PlanScreen extends StatefulWidget {
 }
 
 class _PlanScreenState extends State<PlanScreen> {
-  Plan plan = Plan(); // Hapus const agar bisa dimodifikasi
+  Plan plan = const Plan();
+  late ScrollController scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    scrollController = ScrollController()
+      ..addListener(() {
+        FocusScope.of(context).requestFocus(FocusNode());
+      });
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
 
   Widget _buildAddTaskButton() {
     return FloatingActionButton(
@@ -18,7 +34,7 @@ class _PlanScreenState extends State<PlanScreen> {
         setState(() {
           plan = Plan(
             name: plan.name,
-            tasks: [...plan.tasks, const Task()], // Menggunakan spread operator
+            tasks: List<Task>.from(plan.tasks)..add(const Task()),
           );
         });
       },
@@ -33,11 +49,11 @@ class _PlanScreenState extends State<PlanScreen> {
           setState(() {
             plan = Plan(
               name: plan.name,
-              tasks: [
-                ...plan.tasks.sublist(0, index),
-                Task(description: task.description, complete: selected ?? false),
-                ...plan.tasks.sublist(index + 1),
-              ],
+              tasks: List<Task>.from(plan.tasks)
+                ..[index] = Task(
+                  description: task.description,
+                  complete: selected ?? false,
+                ),
             );
           });
         },
@@ -48,11 +64,11 @@ class _PlanScreenState extends State<PlanScreen> {
           setState(() {
             plan = Plan(
               name: plan.name,
-              tasks: [
-                ...plan.tasks.sublist(0, index),
-                Task(description: text, complete: task.complete),
-                ...plan.tasks.sublist(index + 1),
-              ],
+              tasks: List<Task>.from(plan.tasks)
+                ..[index] = Task(
+                  description: text,
+                  complete: task.complete,
+                ),
             );
           });
         },
@@ -62,6 +78,10 @@ class _PlanScreenState extends State<PlanScreen> {
 
   Widget _buildList() {
     return ListView.builder(
+      controller: scrollController,
+      keyboardDismissBehavior: Theme.of(context).platform == TargetPlatform.iOS
+          ? ScrollViewKeyboardDismissBehavior.onDrag
+          : ScrollViewKeyboardDismissBehavior.manual,
       itemCount: plan.tasks.length,
       itemBuilder: (context, index) {
         return _buildTaskTile(plan.tasks[index], index);
@@ -72,7 +92,14 @@ class _PlanScreenState extends State<PlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Master Plan Robby')),
+      appBar: AppBar(
+        title: const Text(
+          'Master Plan Robby',
+          style: TextStyle(color: Colors.white), // Ubah warna teks jadi putih
+        ),
+        backgroundColor: Colors.lightBlue, // Ubah warna navbar jadi biru muda
+        iconTheme: const IconThemeData(color: Colors.white), // Pastikan ikon juga putih
+      ),
       body: _buildList(),
       floatingActionButton: _buildAddTaskButton(),
     );
