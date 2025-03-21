@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import './views/plan_screen.dart';
+import 'views/plan_screen.dart'; // Pastikan path ini benar
 
-void main() => runApp(MasterPlanApp());
+void main() => runApp(const MasterPlanApp());
 
 class MasterPlanApp extends StatelessWidget {
   const MasterPlanApp({super.key});
@@ -9,8 +9,9 @@ class MasterPlanApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false, // Hilangkan label debug
       theme: ThemeData(primarySwatch: Colors.purple),
-      home: PlanScreen(),
+      home: const PlanScreen(),
     );
   }
 }
